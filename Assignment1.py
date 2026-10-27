@@ -1,157 +1,114 @@
-"""CSE 242 Assignment 1 — submit as Assignment1.py.
-
-Fill # YOUR ANSWER HERE blocks with commented reasoning; fill function bodies
-at # YOUR CODE HERE. Keep signatures. See README.md and INTERFACE.md.
-Functions must not mutate inputs, prompt for input, or perform network I/O.
-Only code inside the main guard should save/show figures.
-"""
 import numpy as np
 
 
-# PART 1 (20 points), Q1: Show computations for the given A and B.
-# YOUR ANSWER HERE
 def matrix_operations(A=None, B=None):
-    """Return AB, BA, (A+B).T, A@B.T, trace(A), trace(AB).
-
-    Defaults: A=[[3,4],[2,1]], B=[[1,2],[0,-1]]. Other inputs are square
-    real matrices of matching size. Return a tuple in the specified order.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    A = np.array([[3, 4], [2, 1]] if A is None else A, dtype=float)
+    B = np.array([[1, 2], [0, -1]] if B is None else B, dtype=float)
+    return A @ B, B @ A, (A + B).T, A @ B.T, np.trace(A), np.trace(A @ B)
 
 
-# P1 Q2: Derive the given M eigenpairs and verify Mv=lambda*v.
-# YOUR ANSWER HERE
 def eigensystem(M=None):
-    """Return (values, vectors) for real symmetric M (default [[2,-1],[-1,2]]).
-
-    Vectors are columns paired with values; order, sign, and nonzero scale
-    are free. Vectors must span each eigenspace, including repeated roots.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    M = np.array([[2, -1], [-1, 2]] if M is None else M, dtype=float)
+    return np.linalg.eigh(M)
 
 
-# P1 Q3: Prove trace(AB)=trace(BA) for compatible matrices.
-# YOUR ANSWER HERE
-
-# P1 Q4: Show the given C is invertible, and compute its inverse step by step.
-# YOUR ANSWER HERE
 def matrix_inverse(C=None):
-    """Return inverse of nonsingular square C; default C=[[4,7],[2,6]]."""
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    C = np.array([[4, 7], [2, 6]] if C is None else C, dtype=float)
+    return np.linalg.inv(C)
 
 
-# PART 2 (50 points), Q1: Normalize c*3**k/k!, derive expectation and variance.
-# YOUR ANSWER HERE
 def distribution_moments(rate=3.):
-    """Return (c, mean, variance) for P(X=k)=c*rate**k/k!, k>=0, rate>0."""
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    return np.exp(-rate), rate, rate
 
 
-# P2 Q2: Show reasoning for intersection, conditional, and union probabilities.
-# YOUR ANSWER HERE
 def event_probabilities(p_a=.5, p_b=.3, p_a_given_b=.6):
-    """Return (P(A intersect B), P(B|A), P(A union B)).
-
-    Inputs describe a valid distribution with p_a,p_b>0.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    p = p_a_given_b * p_b
+    return p, p / p_a, p_a + p_b - p
 
 
-# P2 Q3: Derive MLE/MAP for H,H,T,H,T, including the prior and maximization.
-# YOUR ANSWER HERE
 def coin_estimates(heads=3, tosses=5):
-    """Return (MLE, MAP) using prior density 2*theta on [0,1].
-
-    0<=heads<=tosses, positive integer tosses. Include boundary maxima.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    return heads / tosses, (heads + 1) / (tosses + 1)
 
 
-# P2 Q4: Derive both Gaussian MLEs for [1,3,5,7] step by step.
-# YOUR ANSWER HERE
 def gaussian_mle(data=None):
-    """Return (mean MLE, variance MLE); default data=[1,3,5,7].
-
-    Other inputs are finite 1D samples of length>=2 with nonzero variance.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    x = np.array([1, 3, 5, 7] if data is None else data, dtype=float)
+    return x.mean(), x.var()
 
 
-# P2 Q5: Derive the Gaussian posterior mode for the given observation/prior.
-# YOUR ANSWER HERE
 def gaussian_map(x=5., observation_variance=4., prior_mean=0., prior_variance=1.):
-    """Return posterior mode for one observation and a Gaussian mean prior.
-
-    Both variances are positive; inputs are variances, not standard deviations.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    v, m, t = observation_variance, prior_mean, prior_variance
+    return (x / v + m / t) / (1 / v + 1 / t)
 
 
-# P2 Q6: Prove Var(X)=E[X**2]-E[X]**2.
-# YOUR ANSWER HERE
-
-# PART 3 (30 points), Q1: Define covariance and derive Var(u.T@X)=u.T@Sigma@u.
-# YOUR ANSWER HERE
-
-# P3 Q2: Describe the Gaussian generator and observed correlation.
-# YOUR ANSWER HERE
 def generate_data(n_samples=500, seed=0, mean=None, covariance=None):
-    """Return reproducible Gaussian samples (n_samples,2) using NumPy and seed.
-
-    Defaults: mean=[2,-1], covariance=[[3,1.2],[1.2,1]]. Custom mean has shape
-    (2,), covariance (2,2) is positive definite. Do not mutate input arrays.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    m = [2, -1] if mean is None else mean
+    c = [[3, 1.2], [1.2, 1]] if covariance is None else covariance
+    return np.random.default_rng(seed).multivariate_normal(m, c, n_samples)
 
 
-# P3 Q3: Link centering/covariance/eigendecomposition to the derivation and explain the plot.
-# YOUR ANSWER HERE
 def pca(X):
-    """Fit NumPy PCA without mutating finite X of shape (n,2), n>=2.
+    x = np.asarray(X, dtype=float)
+    m = x.mean(axis=0)
+    z = x - m
+    c = z.T @ z / (len(x) - 1)
+    w, u = np.linalg.eigh(c)
+    i = np.argsort(w)[::-1]
+    w, u = np.maximum(w[i], 0), u[:, i]
+    for j in range(u.shape[1]):
+        if u[np.argmax(abs(u[:, j])), j] < 0:
+            u[:, j] *= -1
+    return dict(mean=m, centered=z, covariance=c, eigenvalues=w,
+                components=u, scores=z @ u)
 
-    Return dict: mean (2,), centered (n,2), covariance (2,2), eigenvalues (2,),
-    components (2,2), scores (n,2). Use covariance divisor n-1, descending
-    eigenvalues, orthonormal eigenvectors as columns, scores=centered@components.
-    Signs/tied-eigenspace bases are free. Include rank-deficient and tied cases.
-    NumPy eigh/SVD are allowed; fitted library PCA is not.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
 
-
-# P3 Q4: Interpret the variance fractions and dimensionality reduction tradeoff.
-# YOUR ANSWER HERE
 def explained_variance(eigenvalues):
-    """Return same-shape fractions for nonnegative eigenvalues with positive sum."""
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    w = np.asarray(eigenvalues, dtype=float)
+    return w / w.sum()
 
 
-# P3 Q2/Q3/Q4: Provide labeled figures and discuss their meaning.
-# YOUR ANSWER HERE
 def make_plots(X, result):
-    """Return a Matplotlib Figure (or sequence of Figures), without show/save.
+    import matplotlib.pyplot as plt
 
-    Plot samples and principal directions through their mean, and explained
-    variance fractions. Label axes. Plot quality is manually reviewed.
-    """
-    # YOUR CODE HERE
-    raise NotImplementedError()
+    x = np.asarray(X, dtype=float)
+    m, w, u = result['mean'], result['eigenvalues'], result['components']
+    p = explained_variance(w)
+    colors = ['tab:orange', 'tab:green']
 
+    f1, ax = plt.subplots(figsize=(8, 6), layout='constrained')
+    ax.scatter(*x.T, s=16, alpha=.4, label='Samples')
+    ax.scatter(*m, marker='x', c='black', s=70, label='Mean')
+    for j, c in enumerate(colors):
+        d = 2 * np.sqrt(w[j]) * u[:, j]
+        ax.plot([m[0]-d[0], m[0]+d[0]], [m[1]-d[1], m[1]+d[1]], '--', c=c)
+        ax.quiver(*m, *d, angles='xy', scale_units='xy', scale=1,
+                  color=c, label=f'PC{j+1} ({p[j]:.1%})')
+    ax.set(xlabel='Feature 1', ylabel='Feature 2', title='Data and PCs', aspect='equal')
+    ax.legend()
 
-# REFLECTION: contributions, tasks completed, and external resources used.
-# YOUR ANSWER HERE
+    f2, ax = plt.subplots(1, 2, figsize=(12, 5), layout='constrained')
+    b = ax[0].bar(['PC1', 'PC2'], p * 100, color=colors)
+    ax[0].bar_label(b, labels=[f'{v:.2%}' for v in p], padding=5)
+    ax[0].set(ylim=(0, 105), ylabel='Explained variance (%)', title='Explained variance')
+    z = result['scores'][:, :1] @ u[:, :1].T + m
+    ax[1].scatter(*x.T, s=13, alpha=.3, label='Original')
+    ax[1].scatter(*z.T, s=14, alpha=.6, c=colors[0], label='PC1 reconstruction')
+    ax[1].set(xlabel='Feature 1', ylabel='Feature 2', title='2D to 1D', aspect='equal')
+    ax[1].legend()
+    return f1, f2
+
 
 if __name__ == '__main__':
-    # YOUR CODE HERE: call your functions and save/display the requested figures.
-    # This block does not run when the grader imports your functions.
-    pass
+    from pathlib import Path
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    x = generate_data()
+    r = pca(x)
+    p = Path(__file__).resolve().parent / 'Assignment1_figures'
+    p.mkdir(exist_ok=True)
+    for f, name in zip(make_plots(x, r), ['data_pca.png', 'variance_reconstruction.png']):
+        f.savefig(p / name, dpi=180)
+        plt.close(f)
+    print(r['eigenvalues'])
+    print(explained_variance(r['eigenvalues']))
